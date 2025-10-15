@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบย่อ URL - โรงเรียนคุณธรรม สพฐ. โรงเรียนสตรีพัทลุง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-full bg-gray-50">
+    <div class="min-h-full bg-white">
+        <!-- Header -->
+        <header class="glass-effect shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <img src="https://img5.pic.in.th/file/secure-sv1/IMG_25650953161d1c1bbdd8.jpeg" 
+                             alt="โลโก้โรงเรียน" class="h-12 w-12 rounded-full object-cover shadow-md"
+                             onerror="this.src=''; this.alt='โลโก้โรงเรียน'; this.style.display='none';">
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-800">ระบบย่อ URL</h1>
+                            <p class="text-sm text-gray-600">โรงเรียนคุณธรรม สพฐ. โรงเรียนสตรีพัทลุง</p>
+                        </div>
+                    </div>
+                    <div id="userMenu" class="hidden">
+                        <div class="flex items-center space-x-4">
+                            <span id="userEmail" class="text-sm text-gray-700"></span>
+                            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg btn-hover">
+                                ออกจากระบบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Login Form -->
+            <div id="loginForm" class="animate-fade-in">
+                <div class="glass-effect rounded-2xl shadow-xl p-8 max-w-md mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ</h2>
+                        <p class="text-gray-600">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+                    </div>
+                    
+                    <form onsubmit="handleLogin(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">อีเมล</label>
+                            <input type="email" id="loginEmail" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">รหัสผ่าน</label>
+                            <input type="password" id="loginPassword" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl btn-hover">
+                            เข้าสู่ระบบ
+                        </button>
+                    </form>
+                    
+                    <div class="mt-6 text-center">
+                        <button onclick="showRegisterForm()" class="text-blue-600 hover:text-blue-800 font-medium">
+                            ลงทะเบียนใหม่
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden animate-fade-in">
+                <div class="glass-effect rounded-2xl shadow-xl p-8 max-w-md mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">ลงทะเบียน</h2>
+                        <p class="text-gray-600">รอการอนุมัติจากผู้ดูแลระบบ</p>
+                    </div>
+                    
+                    <form onsubmit="handleRegister(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อ-นามสกุล</label>
+                            <input type="text" id="registerName" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">อีเมล</label>
+                            <input type="email" id="registerEmail" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">รหัสผ่าน</label>
+                            <input type="password" id="registerPassword" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-xl btn-hover">
+                            ลงทะเบียน
+                        </button>
+                    </form>
+                    
+                    <div class="mt-6 text-center">
+                        <button onclick="showLoginForm()" class="text-blue-600 hover:text-blue-800 font-medium">
+                            กลับไปเข้าสู่ระบบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="dashboard" class="hidden animate-fade-in">
+                <!-- URL Shortener Form -->
+                <div class="glass-effect rounded-2xl shadow-xl p-8 mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">สร้างลิงก์ย่อ</h2>
+                    <form onsubmit="createShortUrl(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">URL เดิม</label>
+                            <input type="url" id="originalUrl" required placeholder="https://example.com" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อลิงก์ (ไม่บังคับ)</label>
+                            <input type="text" id="customName" placeholder="ชื่อที่ต้องการ" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="isPublic" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="isPublic" class="ml-2 block text-sm text-gray-700">แสดงผลสาธารณะ</label>
+                        </div>
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-xl btn-hover">
+                            สร้างลิงก์ย่อ
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="mb-6">
+                    <div class="flex space-x-1 bg-white rounded-xl p-1 shadow-md">
+                        <button onclick="showTab('myLinks')" id="myLinksTab" class="flex-1 py-2 px-4 rounded-lg font-medium transition-all bg-blue-600 text-white">
+                            ลิงก์ของฉัน
+                        </button>
+                        <button onclick="showTab('publicLinks')" id="publicLinksTab" class="flex-1 py-2 px-4 rounded-lg font-medium transition-all text-gray-600 hover:text-gray-800">
+                            ลิงก์สาธารณะ
+                        </button>
+                        <button onclick="showTab('adminPanel')" id="adminTab" class="hidden flex-1 py-2 px-4 rounded-lg font-medium transition-all text-gray-600 hover:text-gray-800">
+                            จัดการระบบ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- My Links Tab -->
+                <div id="myLinksContent" class="glass-effect rounded-2xl shadow-xl p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">ลิงก์ของฉัน</h3>
+                    <div id="myLinksList" class="space-y-4">
+                        <!-- Links will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Public Links Tab -->
+                <div id="publicLinksContent" class="hidden glass-effect rounded-2xl shadow-xl p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">ลิงก์สาธารณะ</h3>
+                    <div id="publicLinksList" class="space-y-4">
+                        <!-- Public links will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Admin Panel -->
+                <div id="adminContent" class="hidden glass-effect rounded-2xl shadow-xl p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">จัดการระบบ</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-700 mb-4">คำขออนุมัติ</h4>
+                            <div id="pendingUsers" class="space-y-3">
+                                <!-- Pending users will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-16 bg-white border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="text-center text-gray-600 text-sm">
+                    ©️ 2024 SPT MORAL SCHOOL - โรงเรียนคุณธรรม สพฐ. โรงเรียนสตรีพัทลุง | All Rights Reserved
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqpgEbVDyjkb_YMxM-Og0I6mKyx6djjhk",
+            authDomain: "short-url-spt-moral-school.firebaseapp.com",
+            projectId: "short-url-spt-moral-school",
+            storageBucket: "short-url-spt-moral-school.firebasestorage.app",
+            messagingSenderId: "688796719253",
+            appId: "1:688796719253:web:08304cd58e97e1ab88639c",
+            measurementId: "G-0R3MZQP87E"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        const adminEmail = 'sptmorral@spt.ac.th';
+
+        // Initialize Admin Account
+        async function initializeAdmin() {
+            try {
+                // Check if admin account exists in database
+                const adminQuery = await db.collection('users').where('email', '==', adminEmail).get();
+                
+                if (adminQuery.empty) {
+                    // Try to create admin account
+                    try {
+                        const adminCredential = await auth.createUserWithEmailAndPassword(adminEmail, 'SPTMoralSchool');
+                        const adminUser = adminCredential.user;
+                        
+                        await db.collection('users').doc(adminUser.uid).set({
+                            name: 'ผู้ดูแลระบบ',
+                            email: adminEmail,
+                            approved: true,
+                            isAdmin: true,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        console.log('Admin account created successfully');
+                        await auth.signOut(); // Sign out after creating admin account
+                    } catch (authError) {
+                        if (authError.code === 'auth/email-already-in-use') {
+                            // Account exists in Firebase Auth but not in Firestore
+                            console.log('Admin account exists in Auth, checking Firestore...');
+                            
+                            // Try to sign in to get the user
+                            try {
+                                const signInResult = await auth.signInWithEmailAndPassword(adminEmail, 'SPTMoralSchool');
+                                const existingUser = signInResult.user;
+                                
+                                // Create the user document in Firestore
+                                await db.collection('users').doc(existingUser.uid).set({
+                                    name: 'ผู้ดูแลระบบ',
+                                    email: adminEmail,
+                                    approved: true,
+                                    isAdmin: true,
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                
+                                console.log('Admin document created in Firestore');
+                                await auth.signOut();
+                            } catch (signInError) {
+                                console.log('Could not sign in to existing admin account:', signInError.message);
+                            }
+                        } else {
+                            console.log('Error creating admin account:', authError.message);
+                        }
+                    }
+                } else {
+                    console.log('Admin account already exists');
+                }
+            } catch (error) {
+                console.log('Error initializing admin:', error.message);
+            }
+        }
+
+        // Initialize admin account on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initializeAdmin, 1000); // Wait for Firebase to initialize
+        });
+
+        // Auth State Observer
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists && userDoc.data().approved) {
+                    currentUser = user;
+                    showDashboard();
+                    loadUserLinks();
+                    loadPublicLinks();
+                    if (user.email === adminEmail) {
+                        showAdminPanel();
+                        loadPendingUsers();
+                    }
+                } else {
+                    showMessage('รอการอนุมัติจากผู้ดูแลระบบ', 'warning');
+                    auth.signOut();
+                }
+            } else {
+                currentUser = null;
+                showLoginForm();
+            }
+        });
+
+        // Show/Hide Functions
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('userMenu').classList.add('hidden');
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('userMenu').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminTab').classList.remove('hidden');
+        }
+
+        function showTab(tabName) {
+            // Hide all content
+            document.getElementById('myLinksContent').classList.add('hidden');
+            document.getElementById('publicLinksContent').classList.add('hidden');
+            document.getElementById('adminContent').classList.add('hidden');
+
+            // Reset all tabs
+            document.getElementById('myLinksTab').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('myLinksTab').classList.add('text-gray-600');
+            document.getElementById('publicLinksTab').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('publicLinksTab').classList.add('text-gray-600');
+            document.getElementById('adminTab').classList.remove('bg-blue-600', 'text-white');
+            document.getElementById('adminTab').classList.add('text-gray-600');
+
+            // Show selected content and activate tab
+            if (tabName === 'myLinks') {
+                document.getElementById('myLinksContent').classList.remove('hidden');
+                document.getElementById('myLinksTab').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('myLinksTab').classList.remove('text-gray-600');
+            } else if (tabName === 'publicLinks') {
+                document.getElementById('publicLinksContent').classList.remove('hidden');
+                document.getElementById('publicLinksTab').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('publicLinksTab').classList.remove('text-gray-600');
+            } else if (tabName === 'adminPanel') {
+                document.getElementById('adminContent').classList.remove('hidden');
+                document.getElementById('adminTab').classList.add('bg-blue-600', 'text-white');
+                document.getElementById('adminTab').classList.remove('text-gray-600');
+            }
+        }
+
+        // Authentication Functions
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                showMessage('เข้าสู่ระบบไม่สำเร็จ: ' + error.message, 'error');
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                await db.collection('users').doc(user.uid).set({
+                    name: name,
+                    email: email,
+                    approved: email === adminEmail,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                if (email === adminEmail) {
+                    showMessage('ลงทะเบียนสำเร็จ!', 'success');
+                } else {
+                    showMessage('ลงทะเบียนสำเร็จ! รอการอนุมัติจากผู้ดูแลระบบ', 'success');
+                    auth.signOut();
+                }
+            } catch (error) {
+                showMessage('ลงทะเบียนไม่สำเร็จ: ' + error.message, 'error');
+            }
+        }
+
+        async function logout() {
+            await auth.signOut();
+            showMessage('ออกจากระบบแล้ว', 'success');
+        }
+
+        // URL Shortener Functions
+        async function createShortUrl(event) {
+            event.preventDefault();
+            const originalUrl = document.getElementById('originalUrl').value;
+            const customName = document.getElementById('customName').value;
+            const isPublic = document.getElementById('isPublic').checked;
+
+            try {
+                const shortCode = customName || generateShortCode();
+                const shortUrl = `https://spt-moral-school.github.io/link/${shortCode}`;
+
+                await db.collection('urls').doc(shortCode).set({
+                    originalUrl: originalUrl,
+                    shortCode: shortCode,
+                    shortUrl: shortUrl,
+                    createdBy: currentUser.uid,
+                    createdByEmail: currentUser.email,
+                    isPublic: isPublic,
+                    clicks: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showMessage('สร้างลิงก์ย่อสำเร็จ!', 'success');
+                document.getElementById('originalUrl').value = '';
+                document.getElementById('customName').value = '';
+                document.getElementById('isPublic').checked = false;
+                loadUserLinks();
+                if (isPublic) loadPublicLinks();
+            } catch (error) {
+                showMessage('สร้างลิงก์ไม่สำเร็จ: ' + error.message, 'error');
+            }
+        }
+
+        function generateShortCode() {
+            return Math.random().toString(36).substring(2, 8);
+        }
+
+        // Load Functions
+        async function loadUserLinks() {
+            const snapshot = await db.collection('urls')
+                .where('createdBy', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
+
+            const container = document.getElementById('myLinksList');
+            container.innerHTML = '';
+
+            if (snapshot.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">ยังไม่มีลิงก์</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const linkElement = createLinkElement(data, true);
+                container.appendChild(linkElement);
+            });
+        }
+
+        async function loadPublicLinks() {
+            const snapshot = await db.collection('urls')
+                .where('isPublic', '==', true)
+                .orderBy('createdAt', 'desc')
+                .get();
+
+            const container = document.getElementById('publicLinksList');
+            container.innerHTML = '';
+
+            if (snapshot.empty) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">ยังไม่มีลิงก์สาธารณะ</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const linkElement = createLinkElement(data, false);
+                container.appendChild(linkElement);
+            });
+        }
+
+        async function loadPendingUsers() {
+            const snapshot = await db.collection('users')
+                .where('approved', '==', false)
+                .get();
+
+            const container = document.getElementById('pendingUsers');
+            container.innerHTML = '';
+
+            if (snapshot.empty) {
+                container.innerHTML = '<p class="text-gray-500">ไม่มีคำขออนุมัติ</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const userElement = createPendingUserElement(doc.id, data);
+                container.appendChild(userElement);
+            });
+        }
+
+        // Helper Functions
+        function createLinkElement(data, showActions) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all';
+            
+            div.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">${data.shortUrl}</p>
+                        <p class="text-sm text-gray-500 truncate">${data.originalUrl}</p>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <span class="text-xs text-gray-400">คลิก: ${data.clicks || 0}</span>
+                            ${data.isPublic ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">สาธารณะ</span>' : '<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">ส่วนตัว</span>'}
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="copyToClipboard('${data.shortUrl}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
+                            คัดลอก
+                        </button>
+                        ${showActions ? `<button onclick="deleteUrl('${data.shortCode}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">ลบ</button>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function createPendingUserElement(userId, data) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-xl p-4 border border-gray-200';
+            
+            div.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-gray-900">${data.name}</p>
+                        <p class="text-sm text-gray-500">${data.email}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="approveUser('${userId}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
+                            อนุมัติ
+                        </button>
+                        <button onclick="rejectUser('${userId}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
+                            ปฏิเสธ
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Action Functions
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showMessage('คัดลอกลิงก์แล้ว!', 'success');
+            } catch (error) {
+                showMessage('ไม่สามารถคัดลอกได้', 'error');
+            }
+        }
+
+        async function deleteUrl(shortCode) {
+            if (confirm('คุณต้องการลบลิงก์นี้หรือไม่?')) {
+                try {
+                    await db.collection('urls').doc(shortCode).delete();
+                    showMessage('ลบลิงก์แล้ว', 'success');
+                    loadUserLinks();
+                    loadPublicLinks();
+                } catch (error) {
+                    showMessage('ไม่สามารถลบลิงก์ได้', 'error');
+                }
+            }
+        }
+
+        async function approveUser(userId) {
+            try {
+                await db.collection('users').doc(userId).update({
+                    approved: true
+                });
+                showMessage('อนุมัติผู้ใช้แล้ว', 'success');
+                loadPendingUsers();
+            } catch (error) {
+                showMessage('ไม่สามารถอนุมัติได้', 'error');
+            }
+        }
+
+        async function rejectUser(userId) {
+            try {
+                await db.collection('users').doc(userId).delete();
+                showMessage('ปฏิเสธผู้ใช้แล้ว', 'success');
+                loadPendingUsers();
+            } catch (error) {
+                showMessage('ไม่สามารถปฏิเสธได้', 'error');
+            }
+        }
+
+        // Message Function
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-yellow-500';
+            
+            messageDiv.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-4 animate-fade-in`;
+            messageDiv.textContent = message;
+            
+            container.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98efa4ff92f27325',t:'MTc2MDUzNDc0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
