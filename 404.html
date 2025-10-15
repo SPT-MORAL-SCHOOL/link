@@ -12,15 +12,18 @@
         body {
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* ใช้พื้นหลังไล่ระดับสีเพื่อให้ดูทันสมัย */
+            background: linear-gradient(135deg, #1f2937 0%, #0d121c 100%);
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .main-container {
+            background-color: #f9fafb; /* พื้นหลังส่วนเนื้อหาหลัก */
         }
         .glass-effect {
-            background: rgba(255, 255, 255, 0.9); 
+            /* ปรับปรุงให้ดูคมชัดและมีมิติ */
+            background: rgba(255, 255, 255, 0.95); 
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4); 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(229, 231, 235, 0.6); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
         .animate-fade-in {
             animation: fadeIn 0.5s ease-in;
@@ -36,10 +39,13 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
+        .tab-active {
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+        }
     </style>
 </head>
-<body class="min-h-full bg-gray-50">
-    <div class="min-h-full bg-white">
+<body class="min-h-full">
+    <div class="main-container min-h-screen">
         <header class="glass-effect shadow-lg z-10 sticky top-0">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center py-4">
@@ -54,8 +60,8 @@
                     </div>
                     <div id="userMenu" class="hidden">
                         <div class="flex items-center space-x-4">
-                            <span id="userEmail" class="text-sm font-medium text-gray-700"></span>
-                            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg btn-hover">
+                            <span id="userEmail" class="text-sm font-medium text-gray-700 hidden sm:block"></span>
+                            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm btn-hover">
                                 ออกจากระบบ
                             </button>
                         </div>
@@ -64,9 +70,9 @@
             </div>
         </header>
 
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div id="loginForm" class="animate-fade-in">
-                <div class="glass-effect rounded-2xl shadow-xl p-8 max-w-md mx-auto">
+                <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-md mx-auto">
                     <div class="text-center mb-8">
                         <h2 class="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ</h2>
                         <p class="text-gray-600">กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
@@ -76,12 +82,12 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">อีเมล</label>
                             <input type="email" id="loginEmail" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">รหัสผ่าน</label>
                             <input type="password" id="loginPassword" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl btn-hover">
                             เข้าสู่ระบบ
@@ -89,7 +95,7 @@
                     </form>
                     
                     <div class="mt-6 text-center">
-                        <button onclick="showRegisterForm()" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <button onclick="showRegisterForm()" class="text-blue-600 hover:text-blue-800 font-medium transition-colors">
                             ลงทะเบียนใหม่
                         </button>
                     </div>
@@ -97,7 +103,7 @@
             </div>
 
             <div id="registerForm" class="hidden animate-fade-in">
-                <div class="glass-effect rounded-2xl shadow-xl p-8 max-w-md mx-auto">
+                <div class="glass-effect rounded-2xl shadow-2xl p-8 max-w-md mx-auto">
                     <div class="text-center mb-8">
                         <h2 class="text-3xl font-bold text-gray-800 mb-2">ลงทะเบียน</h2>
                         <p class="text-gray-600">รอการอนุมัติจากผู้ดูแลระบบ</p>
@@ -107,17 +113,17 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อ-นามสกุล</label>
                             <input type="text" id="registerName" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">อีเมล</label>
                             <input type="email" id="registerEmail" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">รหัสผ่าน</label>
                             <input type="password" id="registerPassword" required 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-xl btn-hover">
                             ลงทะเบียน
@@ -125,7 +131,7 @@
                     </form>
                     
                     <div class="mt-6 text-center">
-                        <button onclick="showLoginForm()" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <button onclick="showLoginForm()" class="text-blue-600 hover:text-blue-800 font-medium transition-colors">
                             กลับไปเข้าสู่ระบบ
                         </button>
                     </div>
@@ -133,60 +139,60 @@
             </div>
 
             <div id="dashboard" class="hidden animate-fade-in">
-                <div class="glass-effect rounded-2xl shadow-xl p-8 mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">สร้างลิงก์ย่อ</h2>
+                <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-10">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">สร้างลิงก์ย่อใหม่</h2>
                     <form onsubmit="createShortUrl(event)" class="space-y-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">URL เดิม</label>
-                            <input type="url" id="originalUrl" required placeholder="https://example.com" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">URL เดิม (ลิงก์เต็ม)</label>
+                            <input type="url" id="originalUrl" required placeholder="https://example.com/long-path" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อลิงก์ (ไม่บังคับ)</label>
-                            <input type="text" id="customName" placeholder="ชื่อที่ต้องการ" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อลิงก์ที่ต้องการ (Short Code/ไม่บังคับ)</label>
+                            <input type="text" id="customName" placeholder="เช่น moral2567" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
                         </div>
                         <div class="flex items-center">
-                            <input type="checkbox" id="isPublic" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label for="isPublic" class="ml-2 block text-sm text-gray-700">แสดงผลสาธารณะ</label>
+                            <input type="checkbox" id="isPublic" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="isPublic" class="ml-2 block text-sm text-gray-700">แสดงผลในส่วนลิงก์สาธารณะ</label>
                         </div>
                         <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-xl btn-hover">
-                            สร้างลิงก์ย่อ
+                            ย่อ URL
                         </button>
                     </form>
                 </div>
 
                 <div class="mb-6">
-                    <div class="flex space-x-1 bg-white rounded-xl p-1 shadow-md">
-                        <button onclick="showTab('myLinks')" id="myLinksTab" class="flex-1 py-2 px-4 rounded-lg font-medium transition-all bg-blue-600 text-white">
+                    <div class="flex space-x-1 bg-gray-100 rounded-xl p-1 shadow-md">
+                        <button onclick="showTab('myLinks')" id="myLinksTab" class="flex-1 py-2 px-4 rounded-lg font-medium transition-all bg-blue-600 text-white tab-active">
                             ลิงก์ของฉัน
                         </button>
-                        <button onclick="showTab('publicLinks')" id="publicLinksTab" class="flex-1 py-2 px-4 rounded-lg font-medium transition-all text-gray-600 hover:text-gray-800">
+                        <button onclick="showTab('publicLinks')" id="publicLinksTab" class="flex-1 py-2 px-4 rounded-lg font-medium transition-all text-gray-700 hover:bg-gray-200">
                             ลิงก์สาธารณะ
                         </button>
-                        <button onclick="showTab('adminPanel')" id="adminTab" class="hidden flex-1 py-2 px-4 rounded-lg font-medium transition-all text-gray-600 hover:text-gray-800">
+                        <button onclick="showTab('adminPanel')" id="adminTab" class="hidden flex-1 py-2 px-4 rounded-lg font-medium transition-all text-gray-700 hover:bg-gray-200">
                             จัดการระบบ
                         </button>
                     </div>
                 </div>
 
-                <div id="myLinksContent" class="glass-effect rounded-2xl shadow-xl p-8">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">ลิงก์ของฉัน</h3>
+                <div id="myLinksContent" class="glass-effect rounded-2xl shadow-2xl p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">รายการลิงก์ที่คุณสร้าง</h3>
                     <div id="myLinksList" class="space-y-4">
                         </div>
                 </div>
 
-                <div id="publicLinksContent" class="hidden glass-effect rounded-2xl shadow-xl p-8">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">ลิงก์สาธารณะ</h3>
+                <div id="publicLinksContent" class="hidden glass-effect rounded-2xl shadow-2xl p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">ลิงก์สาธารณะจากผู้ใช้ทั้งหมด</h3>
                     <div id="publicLinksList" class="space-y-4">
                         </div>
                 </div>
 
-                <div id="adminContent" class="hidden glass-effect rounded-2xl shadow-xl p-8">
-                    <h3 class="text-xl font-bold text-gray-800 mb-6">จัดการระบบ</h3>
+                <div id="adminContent" class="hidden glass-effect rounded-2xl shadow-2xl p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">จัดการบัญชีผู้ใช้งาน</h3>
                     <div class="space-y-6">
                         <div>
-                            <h4 class="text-lg font-semibold text-gray-700 mb-4">คำขออนุมัติ</h4>
+                            <h4 class="text-lg font-semibold text-gray-700 mb-4">คำขออนุมัติผู้ใช้งานใหม่</h4>
                             <div id="pendingUsers" class="space-y-3">
                                 </div>
                         </div>
@@ -197,7 +203,7 @@
             <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
         </main>
 
-        <footer class="mt-16 bg-white border-t border-gray-200">
+        <footer class="mt-20 bg-gray-100 border-t border-gray-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="text-center text-gray-600 text-sm">
                     ©️ 2024 SPT MORAL SCHOOL - โรงเรียนคุณธรรม สพฐ. โรงเรียนสตรีพัทลุง | All Rights Reserved
@@ -207,7 +213,7 @@
     </div>
 
     <script>
-        // Firebase Configuration (ยังคงใช้ข้อมูลชุดเดิม)
+        // Firebase Configuration (ใช้ข้อมูลชุดเดิม)
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyAqpgEbVDyjkb_YMxM-Og0I6mKyx6djjhk",
             authDomain: "short-url-spt-moral-school.firebaseapp.com",
@@ -218,8 +224,8 @@
             measurementId: "G-0R3MZQP87E"
         };
 
-        // *************** การปรับเปลี่ยนสำคัญ ***************
-        // เปลี่ยน Base URL เป็น GitHub Pages URL ที่คุณระบุ
+        // *************** การปรับเปลี่ยนสำคัญ: SHORT_URL_BASE ***************
+        // อัปเดต Base URL เป็น GitHub Pages URL ใหม่: https://spt-moral-school.github.io/link
         const SHORT_URL_BASE = 'https://spt-moral-school.github.io/link'; 
         const ADMIN_EMAIL = 'sptmorral@spt.ac.th';
         
@@ -232,7 +238,6 @@
 
         // Initialize Admin Account
         async function initializeAdmin() {
-            // ... (โค้ด initializeAdmin ยังคงเดิม)
             try {
                 const adminQuery = await db.collection('users').where('email', '==', ADMIN_EMAIL).get();
                 
@@ -281,42 +286,42 @@
             }
         }
 
-        // Check if this is a redirect URL (ปรับปรุงการดึง shortCode สำหรับ GitHub Pages)
+        // Check if this is a redirect URL (ปรับปรุงสำหรับ GitHub Pages)
         async function checkForRedirect() {
-            const path = window.location.pathname;
+            const path = window.location.pathname; 
+            const pathSegments = path.split('/').filter(p => p.length > 0);
             
-            // เนื่องจาก Base URL คือ /link/
-            // path จะเป็น /link/XXXXXX (บนเบราว์เซอร์) หรือ /link/XXXXXX (ใน 404.html)
-            
-            // 1. ลบ Base Path ออกจาก Path Name
-            const basePath = new URL(SHORT_URL_BASE).pathname;
-            let relativePath = path;
-            if (path.startsWith(basePath)) {
-                relativePath = path.substring(basePath.length);
+            // shortCode ควรเป็น segment สุดท้าย เช่น /link/XXXXXX -> XXXXXX
+            let shortCode = pathSegments.pop(); 
+
+            // 1. กรองชื่อไฟล์มาตรฐานของ GitHub Pages ออกไป
+            if (shortCode && (shortCode.toLowerCase() === 'index.html' || shortCode.toLowerCase() === '404.html')) {
+                shortCode = pathSegments.pop(); // ได้ segment ก่อนหน้า (อาจเป็น 'link' หรือ shortcode)
             }
             
-            // 2. ดึง shortCode จาก Relative Path
-            // relativePath จะเป็น /XXXXXX หรือ /XXXXXX/index.html หรือ /
-            const shortCode = relativePath.substring(1).split('/')[0].split('.')[0];
+            // 2. กรองชื่อ directory ที่เป็น base path ออกไป ('link')
+            if (shortCode && shortCode.toLowerCase() === 'link') {
+                shortCode = null;
+            }
             
-            // ตรวจสอบว่ามี shortCode ที่ไม่ใช่ค่าว่างหรือไม่
-            if (shortCode && shortCode !== '' && shortCode !== 'index' && shortCode !== '404') {
+            // 3. เตรียม Base Path สำหรับ History API
+            const basePath = new URL(SHORT_URL_BASE).pathname; // /link/
+
+            if (shortCode && shortCode !== '') {
                 try {
                     const doc = await db.collection('urls').doc(shortCode).get();
                     
                     if (doc.exists) {
                         const data = doc.data();
                         
-                        // Update click count (ไม่ต้องรอให้เสร็จ)
                         db.collection('urls').doc(shortCode).update({
                             clicks: firebase.firestore.FieldValue.increment(1)
                         }).catch(e => console.error("Error updating click count:", e));
                         
-                        // Redirect ไปยัง original URL
                         window.location.replace(data.originalUrl); 
-                        return true; // บอกว่ามีการ redirect แล้ว
+                        return true; 
                     } else {
-                         // ถ้าไม่พบลิงก์ ให้แสดงหน้าหลัก
+                         // ถ้าไม่พบลิงก์
                          history.replaceState({}, document.title, basePath); 
                          showMessage('ไม่พบลิงก์ที่ต้องการ', 'error');
                          return false; 
@@ -336,7 +341,7 @@
             const isRedirecting = await checkForRedirect();
 
             if (isRedirecting) {
-                return; // ถ้ากำลัง redirect ให้หยุดการทำงานที่เหลือ
+                return;
             }
             
             if (user) {
@@ -366,7 +371,7 @@
         });
 
 
-        // Show/Hide Functions (โค้ดที่เหลือยังคงเดิม)
+        // Show/Hide Functions
         function showLoginForm() {
             document.getElementById('loginForm').classList.remove('hidden');
             document.getElementById('registerForm').classList.add('hidden');
@@ -386,7 +391,7 @@
             document.getElementById('dashboard').classList.remove('hidden');
             document.getElementById('userMenu').classList.remove('hidden');
             document.getElementById('userEmail').textContent = currentUser.email;
-            showTab('myLinks'); // แสดงแท็บ My Links เป็นค่าเริ่มต้น
+            showTab('myLinks'); 
         }
 
         function showAdminPanel() {
@@ -399,24 +404,24 @@
             document.getElementById('publicLinksContent').classList.add('hidden');
             document.getElementById('adminContent').classList.add('hidden');
 
-            // Reset all tabs
+            // Reset all tabs styles
             const tabs = ['myLinksTab', 'publicLinksTab', 'adminTab'];
             tabs.forEach(id => {
                 const tab = document.getElementById(id);
                 if (tab) {
-                    tab.classList.remove('bg-blue-600', 'text-white');
-                    tab.classList.add('text-gray-600');
+                    tab.classList.remove('bg-blue-600', 'text-white', 'tab-active');
+                    tab.classList.add('text-gray-700', 'hover:bg-gray-200');
                 }
             });
 
-            // Show selected content and activate tab
+            // Show selected content and activate tab style
             const selectedTab = document.getElementById(`${tabName}Tab`);
             const selectedContent = document.getElementById(`${tabName}Content`);
             
             if (selectedTab && selectedContent) {
                 selectedContent.classList.remove('hidden');
-                selectedTab.classList.add('bg-blue-600', 'text-white');
-                selectedTab.classList.remove('text-gray-600');
+                selectedTab.classList.add('bg-blue-600', 'text-white', 'tab-active');
+                selectedTab.classList.remove('text-gray-700', 'hover:bg-gray-200');
             }
         }
 
@@ -473,10 +478,16 @@
         async function createShortUrl(event) {
             event.preventDefault();
             const originalUrl = document.getElementById('originalUrl').value;
-            const customName = document.getElementById('customName').value.trim();
+            const customName = document.getElementById('customName').value.trim().toLowerCase(); // lowercase เพื่อความสม่ำเสมอ
             const isPublic = document.getElementById('isPublic').checked;
 
             try {
+                // ตรวจสอบความถูกต้องของ shortCode
+                if (customName && !/^[a-z0-9-]+$/.test(customName)) {
+                     showMessage('ชื่อลิงก์ต้องเป็นภาษาอังกฤษตัวเล็ก ตัวเลข หรือเครื่องหมายขีดกลาง (-) เท่านั้น', 'error');
+                     return;
+                }
+
                 const shortCode = customName || generateShortCode();
 
                 const docCheck = await db.collection('urls').doc(shortCode).get();
@@ -525,7 +536,7 @@
                 container.innerHTML = '';
 
                 if (snapshot.empty) {
-                    container.innerHTML = '<p class="text-gray-500 text-center py-8">ยังไม่มีลิงก์</p>';
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8 bg-gray-50 rounded-lg">ยังไม่มีลิงก์</p>';
                     return;
                 }
 
@@ -537,7 +548,7 @@
             } catch (error) {
                 console.error('Error loading user links:', error);
                 const container = document.getElementById('myLinksList');
-                container.innerHTML = '<p class="text-red-500 text-center py-8">เกิดข้อผิดพลาดในการโหลดลิงก์ (โปรดตรวจสอบ Firebase Index/Rules)</p>';
+                container.innerHTML = '<p class="text-red-500 text-center py-8 bg-red-50 rounded-lg">เกิดข้อผิดพลาดในการโหลดลิงก์ (โปรดตรวจสอบ Firebase Index และ Security Rules)</p>';
             }
         }
 
@@ -552,7 +563,7 @@
                 container.innerHTML = '';
 
                 if (snapshot.empty) {
-                    container.innerHTML = '<p class="text-gray-500 text-center py-8">ยังไม่มีลิงก์สาธารณะ</p>';
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8 bg-gray-50 rounded-lg">ยังไม่มีลิงก์สาธารณะ</p>';
                     return;
                 }
 
@@ -564,7 +575,7 @@
             } catch (error) {
                 console.error('Error loading public links:', error);
                 const container = document.getElementById('publicLinksList');
-                container.innerHTML = '<p class="text-red-500 text-center py-8">เกิดข้อผิดพลาดในการโหลดลิงก์สาธารณะ (โปรดตรวจสอบ Firebase Index/Rules)</p>';
+                container.innerHTML = '<p class="text-red-500 text-center py-8 bg-red-50 rounded-lg">เกิดข้อผิดพลาดในการโหลดลิงก์สาธารณะ (โปรดตรวจสอบ Firebase Index และ Security Rules)</p>';
             }
         }
 
@@ -578,7 +589,7 @@
                 container.innerHTML = '';
 
                 if (snapshot.empty) {
-                    container.innerHTML = '<p class="text-gray-500">ไม่มีคำขออนุมัติ</p>';
+                    container.innerHTML = '<p class="text-gray-500 bg-gray-50 p-4 rounded-lg">ไม่มีคำขออนุมัติ</p>';
                     return;
                 }
 
@@ -597,26 +608,23 @@
         // Helper Functions
         function createLinkElement(data, showActions) {
             const div = document.createElement('div');
-            div.className = 'bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all';
+            div.className = 'bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-lg transition-all';
             
             div.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">${data.shortUrl}</p>
-                        <p class="text-sm text-gray-500 truncate">${data.originalUrl}</p>
-                        <div class="flex items-center space-x-4 mt-2">
-                            <span class="text-xs text-gray-400">คลิก: ${data.clicks || 0}</span>
-                            ${data.isPublic ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">สาธารณะ</span>' : '<span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">ส่วนตัว</span>'}
+                        <a href="${data.shortUrl}" target="_blank" class="text-base font-semibold text-blue-600 hover:text-blue-800 truncate block">${data.shortUrl}</a>
+                        <p class="text-sm text-gray-500 truncate mt-1">${data.originalUrl}</p>
+                        <div class="flex items-center space-x-4 mt-3">
+                            <span class="text-xs text-gray-600 font-medium">คลิก: <span class="text-blue-600 font-bold">${data.clicks || 0}</span></span>
+                            ${data.isPublic ? '<span class="text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium">สาธารณะ</span>' : '<span class="text-xs bg-gray-100 text-gray-800 px-3 py-1 rounded-full font-medium">ส่วนตัว</span>'}
                         </div>
                     </div>
                     <div class="flex space-x-2">
-                        <button onclick="openUrl('${data.originalUrl}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
-                            เปิด
-                        </button>
-                        <button onclick="copyToClipboard('${data.shortUrl}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
+                        <button onclick="copyToClipboard('${data.shortUrl}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm btn-hover flex items-center">
                             คัดลอก
                         </button>
-                        ${showActions ? `<button onclick="deleteUrl('${data.shortCode}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">ลบ</button>` : ''}
+                        ${showActions ? `<button onclick="deleteUrl('${data.shortCode}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm btn-hover flex items-center">ลบ</button>` : ''}
                     </div>
                 </div>
             `;
@@ -626,7 +634,7 @@
 
         function createPendingUserElement(userId, data) {
             const div = document.createElement('div');
-            div.className = 'bg-white rounded-xl p-4 border border-gray-200';
+            div.className = 'bg-white rounded-xl p-4 border border-gray-200 shadow-sm';
             
             div.innerHTML = `
                 <div class="flex items-center justify-between">
@@ -635,10 +643,10 @@
                         <p class="text-sm text-gray-500">${data.email}</p>
                     </div>
                     <div class="flex space-x-2">
-                        <button onclick="approveUser('${userId}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
+                        <button onclick="approveUser('${userId}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm btn-hover">
                             อนุมัติ
                         </button>
-                        <button onclick="rejectUser('${userId}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm btn-hover">
+                        <button onclick="rejectUser('${userId}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm btn-hover">
                             ปฏิเสธ
                         </button>
                     </div>
@@ -658,12 +666,12 @@
                 await navigator.clipboard.writeText(text);
                 showMessage('คัดลอกลิงก์แล้ว!', 'success');
             } catch (error) {
-                showMessage('ไม่สามารถคัดลอกได้', 'error');
+                showMessage('ไม่สามารถคัดลอกได้ (โปรดลองคัดลอกด้วยตัวเอง)', 'error');
             }
         }
 
         async function deleteUrl(shortCode) {
-            if (confirm('คุณต้องการลบลิงก์นี้หรือไม่?')) {
+            if (confirm('คุณต้องการลบลิงก์นี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
                 try {
                     await db.collection('urls').doc(shortCode).delete();
                     showMessage('ลบลิงก์แล้ว', 'success');
