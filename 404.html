@@ -225,8 +225,8 @@
         };
 
         // *************** การปรับเปลี่ยนสำคัญ: SHORT_URL_BASE ***************
-        // อัปเดต Base URL เป็น GitHub Pages URL ใหม่: https://spt-moral-school.github.io/link
-        const SHORT_URL_BASE = 'https://spt-moral-school.github.io/link'; 
+        // อัปเดต Base URL เป็น GitHub Pages URL ใหม่: https://spt-moral-school.github.io/shorturl/
+        const SHORT_URL_BASE = 'https://spt-moral-school.github.io/shorturl'; 
         const ADMIN_EMAIL = 'sptmorral@spt.ac.th';
         
         // Initialize Firebase
@@ -289,32 +289,36 @@
         // Check if this is a redirect URL (ปรับปรุงสำหรับ GitHub Pages)
         async function checkForRedirect() {
             const path = window.location.pathname; 
-            const pathSegments = path.split('/').filter(p => p.length > 0);
+            const basePath = new URL(SHORT_URL_BASE).pathname; // /shorturl/
+            const shortCode = path.startsWith(basePath + '/') ? path.substring(basePath.length + 1) : path.substring(basePath.length); 
             
-            // shortCode ควรเป็น segment สุดท้าย เช่น /link/XXXXXX -> XXXXXX
-            let shortCode = pathSegments.pop(); 
+            let finalShortCode = shortCode;
 
             // 1. กรองชื่อไฟล์มาตรฐานของ GitHub Pages ออกไป
-            if (shortCode && (shortCode.toLowerCase() === 'index.html' || shortCode.toLowerCase() === '404.html')) {
-                shortCode = pathSegments.pop(); // ได้ segment ก่อนหน้า (อาจเป็น 'link' หรือ shortcode)
+            if (finalShortCode && (finalShortCode.toLowerCase() === 'index.html' || finalShortCode.toLowerCase() === '404.html')) {
+                finalShortCode = ''; 
             }
             
-            // 2. กรองชื่อ directory ที่เป็น base path ออกไป ('link')
-            if (shortCode && shortCode.toLowerCase() === 'link') {
-                shortCode = null;
+            // 2. ถ้า shortCode มี / ให้เอาส่วนหน้าออก (กรณีมี sub-path หรือ /index.html/shortcode)
+            if (finalShortCode && finalShortCode.includes('/')) {
+                const segments = finalShortCode.split('/').filter(p => p.length > 0);
+                 // ใช้ segment สุดท้ายเป็น shortCode
+                 finalShortCode = segments[segments.length - 1]; 
+                 // และกรองชื่อไฟล์มาตรฐานอีกครั้ง
+                 if (finalShortCode.toLowerCase() === 'index.html' || finalShortCode.toLowerCase() === '404.html' || finalShortCode === new URL(SHORT_URL_BASE).pathname.split('/').pop()) {
+                    finalShortCode = '';
+                 }
             }
-            
-            // 3. เตรียม Base Path สำหรับ History API
-            const basePath = new URL(SHORT_URL_BASE).pathname; // /link/
 
-            if (shortCode && shortCode !== '') {
+
+            if (finalShortCode && finalShortCode !== '') {
                 try {
-                    const doc = await db.collection('urls').doc(shortCode).get();
+                    const doc = await db.collection('urls').doc(finalShortCode).get();
                     
                     if (doc.exists) {
                         const data = doc.data();
                         
-                        db.collection('urls').doc(shortCode).update({
+                        db.collection('urls').doc(finalShortCode).update({
                             clicks: firebase.firestore.FieldValue.increment(1)
                         }).catch(e => console.error("Error updating click count:", e));
                         
