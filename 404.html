@@ -8,39 +8,52 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700;800&family=Prompt:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* ใช้พื้นหลังไล่ระดับสีเพื่อให้ดูทันสมัย */
-            background: linear-gradient(135deg, #1f2937 0%, #0d121c 100%);
+            font-family: 'Prompt', 'Kanit', sans-serif;
         }
-        .main-container {
-            background-color: #f9fafb; /* พื้นหลังส่วนเนื้อหาหลัก */
-        }
-        .glass-effect {
-            /* ปรับปรุงให้ดูคมชัดและมีมิติ */
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(229, 231, 235, 0.6); 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        .animate-fade-in {
+        .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .btn-hover {
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
             transition: all 0.3s ease;
         }
-        .btn-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        .tab-active {
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(102, 126, 234, 0.6); }
         }
     </style>
 </head>
