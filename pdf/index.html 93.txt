@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เอกสารปลอดภัย | นายณัฐพงศ์ ขาวนุ้ย</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        // เอา signInAnonymously ออก
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMdPWCzuV7C1VNhQ0d12LKgZ5oPcPUk1U",
+            authDomain: "natt-sgs.firebaseapp.com",
+            projectId: "natt-sgs",
+            storageBucket: "natt-sgs.firebasestorage.app",
+            messagingSenderId: "1058362846505",
+            appId: "1:1058362846505:web:9d4fbbf88e985e33cd9b38",
+            measurementId: "G-HJLQN0T2CN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.firebaseTools = { auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .watermark-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9999;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><text x='50%' y='50%' fill='rgba(100,100,100,0.08)' font-weight='bold' font-size='28' font-family='Prompt, sans-serif' text-anchor='middle' dominant-baseline='middle' transform='rotate(-35 200 200)'>นายณัฐพงศ์ ขาวนุ้ย</text></svg>");
+            background-repeat: repeat;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark-scrollbar::-webkit-scrollbar-thumb { background: #555; }
+        .dark-scrollbar::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .pdf-page-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800 selection:bg-transparent">
+    
+    <div class="watermark-overlay" oncontextmenu="return false;"></div>
+    <div id="root" class="flex-grow flex flex-col h-full relative z-10"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // --- Component: PdfThumbnail ---
+        function PdfThumbnail({ url, title, isLocked }) {
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+            const [status, setStatus] = useState('loading'); 
+            const [isVisible, setIsVisible] = useState(false);
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(([entry]) => {
+                    if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); }
+                }, { rootMargin: '100px' });
+                if (containerRef.current) observer.observe(containerRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            useEffect(() => {
+                if (!isVisible || status === 'success' || isLocked) {
+                    if (isLocked) setStatus('locked');
+                    return;
+                }
+                let loadingTask;
+                const generateThumbnail = async () => {
+                    try {
+                        loadingTask = pdfjsLib.getDocument(url);
+                        const pdf = await loadingTask.promise;
+                        const page = await pdf.getPage(1);
+                        const canvas = canvasRef.current;
+                        if (!canvas) return;
+                        const ctx = canvas.getContext('2d');
+                        const viewport = page.getViewport({ scale: 0.5 });
+                        canvas.width = viewport.width; canvas.height = viewport.height;
+                        await page.render({ canvasContext: ctx, viewport }).promise;
+                        setStatus('success');
+                    } catch (error) { setStatus('fallback'); }
+                };
+                generateThumbnail();
+                return () => { if (loadingTask) loadingTask.destroy(); };
+            }, [isVisible, url, isLocked]);
+
+            const fallbackColors = ['from-blue-500 to-indigo-600', 'from-emerald-400 to-teal-600', 'from-rose-400 to-red-600', 'from-amber-400 to-orange-500', 'from-violet-500 to-purple-700'];
+            const colorClass = fallbackColors[title.length % fallbackColors.length];
+
+            return (
+                <div ref={containerRef} className="w-full h-48 md:h-56 bg-slate-100 relative overflow-hidden flex items-center justify-center">
+                    {status === 'loading' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-slate-400 animate-pulse">
+                            <i className="fa-solid fa-image text-3xl mb-2"></i><span className="text-xs">กำลังโหลดหน้าปก...</span>
+                        </div>
+                    )}
+                    <canvas ref={canvasRef} className={`w-full h-full object-cover transition-opacity duration-500 ${status === 'success' ? 'opacity-100' : 'opacity-0 absolute'}`}></canvas>
+                    
+                    {(status === 'fallback' || status === 'locked') && (
+                        <div className={`w-full h-full bg-gradient-to-br ${status === 'locked' ? 'from-slate-700 to-slate-900' : colorClass} p-6 flex flex-col justify-between text-white relative`}>
+                            <div className="absolute top-0 left-0 w-full h-full opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+                            <i className={`fa-solid ${status === 'locked' ? 'fa-lock' : 'fa-file-pdf'} text-4xl opacity-80 z-10`}></i>
+                            <div className="z-10">
+                                <h4 className="font-bold text-lg leading-tight line-clamp-2 drop-shadow-md">{title}</h4>
+                            </div>
+                        </div>
+                    )}
+                    {status === 'success' && <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-black/40 to-transparent"></div>}
+                    
+                    {isLocked && (
+                        <div className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md flex items-center gap-1 z-20">
+                            <i className="fa-solid fa-lock text-[8px]"></i> ใส่รหัส
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- Component: PdfPage ---
+        function PdfPage({ pdfDoc, pageNumber, scale = 1.5, onVisible }) {
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+            const [isVisible, setIsVisible] = useState(false);
+            const [isRendered, setIsRendered] = useState(false);
+
+            useEffect(() => {
+                const observer = new IntersectionObserver(([entry]) => {
+                    if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); }
+                }, { rootMargin: '600px' });
+                if (containerRef.current) observer.observe(containerRef.current);
+                return () => observer.disconnect();
+            }, []);
+
+            useEffect(() => {
+                const activeObserver = new IntersectionObserver(([entry]) => {
+                    if (entry.isIntersecting && onVisible) onVisible(pageNumber);
+                }, { threshold: 0.4 }); 
+                if (containerRef.current) activeObserver.observe(containerRef.current);
+                return () => activeObserver.disconnect();
+            }, [pageNumber, onVisible]);
+
+            useEffect(() => {
+                if (!isVisible || isRendered || !pdfDoc) return;
+                let renderTask = null;
+                const renderPage = async () => {
+                    try {
+                        const page = await pdfDoc.getPage(pageNumber);
+                        const canvas = canvasRef.current;
+                        if (!canvas) return;
+                        const ctx = canvas.getContext('2d');
+                        const viewport = page.getViewport({ scale: scale });
+                        
+                        const screenWidth = window.innerWidth;
+                        const finalScale = screenWidth < 768 ? (screenWidth * 0.95) / viewport.width : 1;
+                        const responsiveViewport = page.getViewport({ scale: scale * finalScale });
+
+                        canvas.width = responsiveViewport.width; canvas.height = responsiveViewport.height;
+
+                        renderTask = page.render({ canvasContext: ctx, viewport: responsiveViewport });
+                        await renderTask.promise;
+
+                        ctx.font = `bold ${30 * scale}px Prompt, sans-serif`;
+                        ctx.fillStyle = 'rgba(150, 150, 150, 0.4)';
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(-Math.PI / 4);
+                        const text = "นายณัฐพงศ์ ขาวนุ้ย";
+                        for (let x = -canvas.width * 2; x < canvas.width * 2; x += 300 * scale) {
+                            for (let y = -canvas.height * 2; y < canvas.height * 2; y += 150 * scale) {
+                                ctx.fillText(text, x, y);
+                            }
+                        }
+                        ctx.restore();
+                        setIsRendered(true);
+                    } catch (error) { if (error.name !== 'RenderingCancelledException') console.error(`Render Error:`, error); }
+                };
+                renderPage();
+                return () => { if (renderTask) renderTask.cancel(); };
+            }, [isVisible, isRendered, pdfDoc, pageNumber, scale]);
+
+            return (
+                <div id={`pdf-page-${pageNumber}`} ref={containerRef} className="relative mb-6 bg-white pdf-page-shadow rounded-sm mx-auto flex items-center justify-center min-h-[400px]" style={{ width: '100%', maxWidth: '850px' }}>
+                    {!isRendered && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400">
+                            <i className="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i><span className="text-sm font-medium">กำลังเตรียมหน้า {pageNumber}...</span>
+                        </div>
+                    )}
+                    <canvas ref={canvasRef} className="block mx-auto" />
+                </div>
+            );
+        }
+
+        // --- Component: Viewer ---
+        function Viewer({ pdf, setRoute, onBack }) {
+            const [pdfDoc, setPdfDoc] = useState(null);
+            const [numPages, setNumPages] = useState(0);
+            const [status, setStatus] = useState('loading'); 
+            const [currentPage, setCurrentPage] = useState(1);
+            const [isNavOpen, setIsNavOpen] = useState(false);
+
+            useEffect(() => {
+                const loadPdf = async () => {
+                    try {
+                        const loadingTask = pdfjsLib.getDocument(pdf.url);
+                        const doc = await loadingTask.promise;
+                        setPdfDoc(doc); setNumPages(doc.numPages); setStatus('success');
+                    } catch (error) { setStatus('fallback'); }
+                };
+                loadPdf();
+            }, [pdf.url]);
+
+            const handleClose = () => {
+                if(onBack) { onBack(); } 
+                else { window.history.pushState({}, '', window.location.pathname); setRoute('home'); }
+            };
+
+            const scrollToPage = (pageNum) => {
+                const element = document.getElementById(`pdf-page-${pageNum}`);
+                if (element) { element.scrollIntoView({ behavior: 'smooth', block: 'start' }); setIsNavOpen(false); }
+            };
+            const handlePageVisible = useCallback((pageNum) => { setCurrentPage(pageNum); }, []);
+
+            return (
+                <div className="flex flex-col h-screen w-full animate-fade-in relative z-20 bg-[#323639]">
+                    <header className="h-16 bg-[#202124] text-white flex items-center justify-between px-3 sm:px-6 shadow-md border-b border-white/10 shrink-0 z-40 relative">
+                        <div className="flex items-center gap-2 sm:gap-4 w-1/4 sm:w-1/3">
+                            <button onClick={handleClose} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors text-slate-300 hover:text-white"><i className="fa-solid fa-arrow-left"></i></button>
+                        </div>
+                        <div className="w-2/4 sm:w-1/3 text-center truncate">
+                            <h2 className="font-semibold text-sm sm:text-base truncate drop-shadow-md px-2" title={pdf.title}>{pdf.title}</h2>
+                        </div>
+                        <div className="w-1/4 sm:w-1/3 flex justify-end items-center gap-2 sm:gap-4">
+                            {status === 'success' && (
+                                <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                                    <span>หน้า</span><span className="text-white w-5 text-center">{currentPage}</span><span className="text-slate-500">/</span><span className="text-slate-400">{numPages}</span>
+                                </div>
+                            )}
+                            {status === 'success' && (
+                                <button onClick={() => setIsNavOpen(!isNavOpen)} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isNavOpen ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'}`}><i className="fa-solid fa-list-ul"></i></button>
+                            )}
+                        </div>
+                    </header>
+
+                    <div className="flex-grow overflow-y-auto w-full relative dark-scrollbar" onContextMenu={e => e.preventDefault()}>
+                        {status === 'loading' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-white/70">
+                                <div className="w-16 h-16 border-4 border-white/10 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+                                <p className="font-medium text-lg">กำลังประมวลผลความปลอดภัย...</p>
+                            </div>
+                        )}
+                        {status === 'success' && pdfDoc && (
+                            <div className="py-8 px-2 sm:px-6 lg:px-8 max-w-5xl mx-auto flex flex-col items-center gap-4 sm:gap-6">
+                                {Array.from(new Array(numPages), (el, index) => (
+                                    <PdfPage key={`page_${index + 1}`} pageNumber={index + 1} pdfDoc={pdfDoc} onVisible={handlePageVisible} />
+                                ))}
+                                <div className="text-center text-white/30 text-xs py-8 font-medium"><i className="fa-solid fa-flag-checkered mb-2 text-lg block"></i> จบเอกสาร</div>
+                            </div>
+                        )}
+                        {status === 'fallback' && (
+                            <div className="w-full h-full relative"><iframe src={`${pdf.url}#toolbar=0&navpanes=0`} className="w-full h-full border-none"></iframe></div>
+                        )}
+                    </div>
+
+                    <div className={`fixed inset-y-0 right-0 w-72 sm:w-80 bg-[#282a2d] shadow-2xl border-l border-white/5 transform transition-transform duration-300 z-50 flex flex-col ${isNavOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                        <div className="h-16 p-4 border-b border-white/10 flex justify-between items-center shrink-0">
+                            <div><h3 className="text-white font-bold tracking-wide">เลือกหน้าเอกสาร</h3><p className="text-xs text-slate-400 mt-0.5">รวมทั้งหมด {numPages} หน้า</p></div>
+                            <button onClick={() => setIsNavOpen(false)} className="w-8 h-8 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div className="flex-grow overflow-y-auto p-4 dark-scrollbar">
+                            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                                {Array.from(new Array(numPages), (_, i) => i + 1).map(pageNum => (
+                                    <button key={pageNum} onClick={() => scrollToPage(pageNum)} className={`aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-all border ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]' : 'bg-[#323639] text-slate-300 border-white/5 hover:bg-white/10 hover:border-white/20'}`}>{pageNum}</button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {isNavOpen && <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm transition-opacity" onClick={() => setIsNavOpen(false)}></div>}
+                </div>
+            );
+        }
+
+        // --- Component: Password Prompt ---
+        function PasswordPrompt({ pdf, onUnlock, onCancel }) {
+            const [input, setInput] = useState('');
+            const [error, setError] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (input === pdf.password) {
+                    onUnlock(pdf.id);
+                } else {
+                    setError('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่');
+                    setInput('');
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md animate-fade-in-up text-center border border-slate-100 relative">
+                        <button onClick={onCancel} className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 bg-slate-50 rounded-full transition-colors"><i className="fa-solid fa-xmark"></i></button>
+                        
+                        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner"><i className="fa-solid fa-lock"></i></div>
+                        
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">ไฟล์นี้มีการป้องกัน</h2>
+                        <p className="text-slate-500 mb-6 text-sm">เอกสาร: <span className="font-semibold text-slate-700">{pdf.title}</span><br/>กรุณากรอกรหัสผ่านเพื่อเข้าดูเอกสาร</p>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <input type="password" value={input} onChange={(e) => {setInput(e.target.value); setError('');}} placeholder="ใส่รหัสผ่านที่นี่..." className={`w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 focus:outline-none transition-all font-medium text-center tracking-widest ${error ? 'border-red-400 focus:ring-red-200 focus:border-red-500' : 'border-transparent focus:ring-2 focus:ring-blue-500 focus:border-transparent'}`} autoFocus />
+                                {error && <p className="text-red-500 text-sm mt-2 font-medium animate-fade-in">{error}</p>}
+                            </div>
+                            <button type="submit" className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold shadow-lg transition-all flex justify-center items-center gap-2">
+                                <i className="fa-solid fa-unlock-keyhole"></i> ปลดล็อคเอกสาร
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Component: Home ---
+        function Home({ pdfs, setViewingPdf, setRoute, unlockedPdfs }) {
+            const handleView = (pdf) => {
+                setViewingPdf(pdf);
+                setRoute('view');
+                const newUrl = `${window.location.origin}${window.location.pathname}?view=${pdf.id}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+            };
+
+            return (
+                <div className="w-full mt-4 md:mt-10 animate-fade-in-up">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-4 tracking-tight">คลังเอกสารของคุณ</h2>
+                        <p className="text-slate-500 max-w-xl mx-auto text-lg">เลือกเอกสารที่ต้องการอ่าน ระบบจะเปิดในโหมด <span className="text-blue-600 font-medium">อ่านปลอดภัย</span> ป้องกันการคัดลอก</p>
+                    </div>
+
+                    {pdfs.length === 0 ? (
+                        <div className="text-center p-16 bg-white rounded-[2rem] shadow-sm border border-slate-200 border-dashed">
+                            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6"><i className="fa-regular fa-folder-open text-4xl text-slate-300"></i></div>
+                            <h3 className="text-xl font-bold text-slate-700 mb-2">ยังไม่มีเอกสารในระบบ</h3>
+                            <p className="text-slate-400">ผู้ดูแลระบบยังไม่ได้เพิ่มเอกสารใดๆ หรือกำลังโหลดข้อมูล</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                            {pdfs.map((pdf, idx) => {
+                                const isLocked = pdf.password && !unlockedPdfs.includes(pdf.id);
+                                return (
+                                    <div key={pdf.id} className="bg-white rounded-[1.5rem] shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 group flex flex-col h-full overflow-hidden cursor-pointer relative" style={{ animationDelay: `${idx * 50}ms` }} onClick={() => handleView(pdf)}>
+                                        <PdfThumbnail url={pdf.url} title={pdf.title} isLocked={isLocked} />
+                                        <div className="p-5 flex flex-col flex-grow">
+                                            <h3 className="font-bold text-slate-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{pdf.title}</h3>
+                                            <div className="mt-auto pt-4 flex items-center justify-between text-xs font-medium text-slate-400">
+                                                <span className="flex items-center gap-1"><i className="fa-regular fa-calendar"></i> {pdf.createdAt ? new Date(pdf.createdAt).toLocaleDateString('th-TH') : 'ไม่ระบุวันที่'}</span>
+                                                <span className={`px-2 py-1 rounded-md transition-colors ${isLocked ? 'bg-red-50 text-red-600' : 'bg-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600'}`}>
+                                                    {isLocked ? <><i className="fa-solid fa-lock text-[10px] mr-1"></i> ล็อคอยู่</> : <>อ่าน <i className="fa-solid fa-chevron-right text-[10px] ml-1"></i></>}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- Component: Login ---
+        function Login({ setRoute, showToast }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault(); setIsSubmitting(true);
+                try {
+                    await window.firebaseTools.signInWithEmailAndPassword(window.firebaseTools.auth, email, password);
+                    showToast('เข้าสู่ระบบผู้ดูแลสำเร็จ', 'success'); setRoute('dashboard');
+                } catch (error) { showToast('อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'error'); } 
+                finally { setIsSubmitting(false); }
+            };
+
+            return (
+                <div className="w-full max-w-md mt-12 md:mt-20 bg-white p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-slate-100 animate-fade-in-up">
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-slate-800 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto mb-5 shadow-lg shadow-slate-200 transform -rotate-3"><i className="fa-solid fa-user-shield"></i></div>
+                        <h2 className="text-2xl font-extrabold text-slate-800">Admin Login</h2>
+                        <p className="text-slate-500 text-sm mt-2">จัดการลิงก์และเอกสารทั้งหมด</p>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-slate-700" placeholder="อีเมลผู้ดูแลระบบ" />
+                        <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-slate-700" placeholder="รหัสผ่าน" />
+                        <button type="submit" disabled={isSubmitting} className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold shadow-lg shadow-slate-200 transition-all flex justify-center items-center gap-2 mt-2">
+                            {isSubmitting ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-arrow-right-to-bracket"></i>} {isSubmitting ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ'}
+                        </button>
+                    </form>
+                    <button onClick={() => { setRoute('home'); window.history.pushState({}, '', window.location.pathname); }} className="w-full mt-6 py-2 text-slate-400 hover:text-slate-600 text-sm font-medium transition-colors">กลับหน้าหลัก (สำหรับบุคคลทั่วไป)</button>
+                </div>
+            );
+        }
+
+        // --- Component: Dashboard ---
+        function Dashboard({ pdfs, showToast, collectionPath }) {
+            const [title, setTitle] = useState('');
+            const [url, setUrl] = useState('');
+            const [filePassword, setFilePassword] = useState('');
+            const [isEditing, setIsEditing] = useState(null);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const { db, collection, addDoc, doc, deleteDoc, updateDoc } = window.firebaseTools;
+
+            const handleAddOrUpdate = async (e) => {
+                e.preventDefault();
+                if (!title || !url) return;
+                setIsSubmitting(true);
+                const payload = { title, url, password: filePassword.trim() || null };
+                try {
+                    if (isEditing) {
+                        await updateDoc(doc(db, collectionPath, isEditing), { ...payload, updatedAt: Date.now() });
+                        showToast('อัปเดตเอกสารสำเร็จ', 'success'); setIsEditing(null);
+                    } else {
+                        await addDoc(collection(db, collectionPath), { ...payload, createdAt: Date.now() });
+                        showToast('เพิ่มเอกสารใหม่เรียบร้อย', 'success');
+                    }
+                    setTitle(''); setUrl(''); setFilePassword('');
+                } catch (error) { showToast('เกิดข้อผิดพลาดในการบันทึก: ' + error.message, 'error'); } 
+                finally { setIsSubmitting(false); }
+            };
+
+            const handleEdit = (pdf) => { setTitle(pdf.title); setUrl(pdf.url); setFilePassword(pdf.password || ''); setIsEditing(pdf.id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+            const handleDelete = async (id) => {
+                if(window.confirm('คุณต้องการลบเอกสารนี้ออกจากระบบใช่หรือไม่?')) {
+                    try { await deleteDoc(doc(db, collectionPath, id)); showToast('ลบเอกสารเรียบร้อย', 'success'); } 
+                    catch (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); }
+                }
+            };
+            const handleShare = (id) => {
+                const shareUrl = `${window.location.origin}${window.location.pathname}?view=${id}`;
+                const tempInput = document.createElement("input"); tempInput.value = shareUrl; document.body.appendChild(tempInput); tempInput.select();
+                try { document.execCommand("copy"); showToast('คัดลอกลิงก์สำหรับแชร์แล้ว', 'success'); } 
+                catch (err) { showToast('ล้มเหลว กรุณาคัดลอก URL เอง', 'error'); }
+                document.body.removeChild(tempInput);
+            };
+
+            return (
+                <div className="w-full mt-6 space-y-8 animate-fade-in-up">
+                    <div className="bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${isEditing ? 'bg-amber-500' : 'bg-blue-600'}`}><i className={`fa-solid ${isEditing ? 'fa-pen' : 'fa-plus'}`}></i></div>
+                            {isEditing ? 'แก้ไขข้อมูลเอกสาร' : 'เพิ่มเอกสาร PDF ใหม่'}
+                        </h2>
+                        <form onSubmit={handleAddOrUpdate} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                            <div className="md:col-span-4">
+                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">ชื่อเอกสาร</label>
+                                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} placeholder="ระบุชื่อที่ต้องการแสดง" className="w-full px-5 py-3.5 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 outline-none font-medium" />
+                            </div>
+                            <div className="md:col-span-4">
+                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">ลิงก์ไฟล์ PDF (URL)</label>
+                                <input type="url" required value={url} onChange={e => setUrl(e.target.value)} placeholder="https://..." className="w-full px-5 py-3.5 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 outline-none font-medium text-blue-600" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">รหัสผ่าน <span className="text-slate-400 font-normal text-xs">(เว้นว่างถ้าสาธารณะ)</span></label>
+                                <input type="text" value={filePassword} onChange={e => setFilePassword(e.target.value)} placeholder="เช่น 1234" className="w-full px-5 py-3.5 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 outline-none font-medium text-slate-700" />
+                            </div>
+                            <div className="md:col-span-2 flex flex-col gap-2">
+                                <button type="submit" disabled={isSubmitting} className={`w-full py-3.5 rounded-xl font-bold text-white shadow-md transition-all ${isEditing ? 'bg-amber-500 hover:bg-amber-600' : 'bg-slate-800 hover:bg-slate-900'}`}>
+                                    {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : (isEditing ? 'บันทึก' : 'เพิ่มไฟล์')}
+                                </button>
+                                {isEditing && <button type="button" onClick={() => {setIsEditing(null); setTitle(''); setUrl(''); setFilePassword('');}} className="w-full py-2 text-sm font-medium text-slate-500 hover:text-slate-800">ยกเลิก</button>}
+                            </div>
+                        </form>
+                    </div>
+
+                    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="p-6 md:p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 className="text-xl font-bold text-slate-800"><i className="fa-solid fa-folder-open text-indigo-500 mr-2"></i> แฟ้มเอกสาร ({pdfs.length})</h2>
+                        </div>
+                        <div className="overflow-x-auto p-4 md:p-8 pt-0">
+                            <table className="w-full text-left border-collapse mt-4">
+                                <thead>
+                                    <tr className="text-slate-400 text-sm border-b-2 border-slate-100">
+                                        <th className="pb-3 px-4 font-semibold w-1/2">รายละเอียด</th>
+                                        <th className="pb-3 px-4 font-semibold text-center">สถานะ</th>
+                                        <th className="pb-3 px-4 font-semibold text-center">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pdfs.map(pdf => (
+                                        <tr key={pdf.id} className="border-b border-slate-50 hover:bg-slate-50/80 transition-colors group">
+                                            <td className="py-5 px-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0"><i className="fa-regular fa-file-pdf text-lg"></i></div>
+                                                    <div className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1">{pdf.title}</div>
+                                                </div>
+                                            </td>
+                                            <td className="py-5 px-4 text-center">
+                                                {pdf.password ? 
+                                                    <span className="bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-md border border-red-100"><i className="fa-solid fa-lock mr-1"></i> มีรหัสผ่าน</span> : 
+                                                    <span className="bg-emerald-50 text-emerald-600 text-xs font-bold px-2.5 py-1 rounded-md border border-emerald-100"><i className="fa-solid fa-earth-americas mr-1"></i> สาธารณะ</span>
+                                                }
+                                            </td>
+                                            <td className="py-5 px-4 flex justify-center gap-2">
+                                                <button onClick={() => handleShare(pdf.id)} className="w-9 h-9 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 flex items-center justify-center shadow-sm transition-all" title="คัดลอกลิงก์แชร์"><i className="fa-solid fa-link"></i></button>
+                                                <button onClick={() => handleEdit(pdf)} className="w-9 h-9 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 flex items-center justify-center shadow-sm transition-all" title="แก้ไข"><i className="fa-solid fa-pen-to-square"></i></button>
+                                                <button onClick={() => handleDelete(pdf.id)} className="w-9 h-9 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 flex items-center justify-center shadow-sm transition-all" title="ลบ"><i className="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {pdfs.length === 0 && <tr><td colSpan="3" className="py-12 text-center text-slate-400 font-medium">ยังไม่มีเอกสารในระบบ</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Component: Toast ---
+        function Toast({ toast }) {
+            const bgColor = toast.type === 'error' ? 'bg-rose-500' : toast.type === 'success' ? 'bg-emerald-500' : 'bg-slate-800';
+            const icon = toast.type === 'error' ? 'fa-triangle-exclamation' : toast.type === 'success' ? 'fa-check' : 'fa-info';
+            return (
+                <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-3.5 rounded-2xl shadow-2xl text-white font-medium z-50 flex items-center gap-3 animate-fade-in-up ${bgColor}`}>
+                    <div className="bg-white/20 w-6 h-6 rounded-full flex items-center justify-center"><i className={`fa-solid ${icon} text-xs`}></i></div>
+                    {toast.message}
+                </div>
+            );
+        }
+
+        // --- Main App Component ---
+        function App() {
+            const [user, setUser] = useState(null);
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [pdfs, setPdfs] = useState([]);
+            const [route, setRoute] = useState('home'); 
+            const [viewingPdf, setViewingPdf] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+            const [unlockedPdfs, setUnlockedPdfs] = useState([]); 
+
+            const { auth, db, onAuthStateChanged, collection, onSnapshot } = window.firebaseTools;
+            const collectionPath = 'artifacts/natt-sgs/public/data/pdfs';
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.key === 'PrintScreen' || (e.ctrlKey && ['p','s','c'].includes(e.key.toLowerCase()))) {
+                        e.preventDefault(); showToast('ไม่อนุญาตให้คัดลอกหรือบันทึกเอกสาร', 'error');
+                        if(navigator.clipboard) navigator.clipboard.writeText('');
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, []);
+
+            // จัดการเรื่อง Login State (ตอนนี้มีแค่สถานะ Login (Admin) กับ ไม่ Login (Public))
+            useEffect(() => {
+                if (!auth) return;
+                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                    setUser(currentUser);
+                    setIsAdmin(!!currentUser); // ถ้ามี User แสดงว่าเป็นแอดมิน (เพราะเราไม่ได้ใช้ Anonymous แล้ว)
+                    setLoading(false);
+                });
+                return () => unsubscribe();
+            }, [auth]);
+
+            // ดึงข้อมูล PDF จาก Firestore ตลอดเวลา (ไม่เช็คว่ามี User ไหม เพราะเปิดให้คนทั่วไปอ่าน)
+            useEffect(() => {
+                if (!db) return;
+                
+                const unsubscribe = onSnapshot(collection(db, collectionPath), 
+                    (snapshot) => {
+                        const pdfData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => b.createdAt - a.createdAt);
+                        setPdfs(pdfData);
+                        
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const viewId = urlParams.get('view');
+                        if (viewId && pdfData.length > 0) {
+                            const targetPdf = pdfData.find(p => p.id === viewId);
+                            if (targetPdf) {
+                                setViewingPdf(targetPdf);
+                                setRoute('view');
+                            } else {
+                                setRoute('home');
+                                window.history.pushState({}, '', window.location.pathname);
+                            }
+                        }
+                    },
+                    (error) => {
+                        console.error("Firebase read error:", error);
+                        if (error.code === 'permission-denied') {
+                            showToast('สิทธิ์การเข้าถึงถูกปฏิเสธ กรุณาตั้งค่า Firestore Rules ให้เป็น Public Read', 'error');
+                        }
+                    }
+                );
+                return () => unsubscribe();
+            }, [db]); // เอา user ออกจาก Dependency เพื่อให้ดึงข้อมูลได้อิสระ
+
+            const showToast = (message, type = 'info') => {
+                setToast({ show: true, message, type });
+                setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3000);
+            };
+
+            const handleLogout = async () => {
+                try {
+                    await window.firebaseTools.signOut(auth);
+                    setRoute('home'); window.history.pushState({}, '', window.location.pathname);
+                    showToast('ออกจากระบบผู้ดูแล', 'success');
+                } catch (error) {}
+            };
+
+            const handleUnlock = (pdfId) => {
+                setUnlockedPdfs(prev => [...prev, pdfId]);
+            };
+
+            const handleBackFromViewer = () => {
+                setRoute('home');
+                window.history.pushState({}, '', window.location.pathname);
+            };
+
+            if (route === 'view' && viewingPdf) {
+                if (viewingPdf.password && !unlockedPdfs.includes(viewingPdf.id)) {
+                    return (
+                        <div className="flex flex-col h-screen w-full bg-[#323639]">
+                            <PasswordPrompt pdf={viewingPdf} onUnlock={handleUnlock} onCancel={handleBackFromViewer} />
+                        </div>
+                    );
+                }
+                return (
+                    <div className="flex flex-col h-screen w-full bg-[#323639]">
+                        <Viewer pdf={viewingPdf} setRoute={setRoute} onBack={handleBackFromViewer} />
+                        {toast.show && <Toast toast={toast} />}
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex flex-col min-h-screen relative z-10">
+                    <header className="sticky top-0 z-40 glassmorphism shadow-sm">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                            <div className="flex items-center gap-3 cursor-pointer group" onClick={handleBackFromViewer}>
+                                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-2.5 rounded-xl shadow-lg group-hover:scale-105 transition-transform"><i className="fa-solid fa-shield-halved text-xl"></i></div>
+                                <div><h1 className="text-xl font-bold text-slate-800 leading-tight tracking-tight">ระบบเอกสาร</h1><p className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest">Secure Storage</p></div>
+                            </div>
+                            <nav>
+                                {isAdmin ? (
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => setRoute('dashboard')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${route === 'dashboard' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}><i className="fa-solid fa-layer-group md:mr-2"></i><span className="hidden md:inline">จัดการไฟล์</span></button>
+                                        <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-all" title="ออกจากระบบ"><i className="fa-solid fa-arrow-right-from-bracket"></i></button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setRoute('login')} className="px-5 py-2.5 rounded-full text-sm font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all flex items-center gap-2">
+                                        <i className="fa-regular fa-circle-user text-lg"></i> แอดมิน
+                                    </button>
+                                )}
+                            </nav>
+                        </div>
+                    </header>
+
+                    <main className="flex-grow flex flex-col items-center p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto">
+                        {loading ? (
+                            <div className="flex-grow flex flex-col items-center justify-center text-slate-400"><i className="fa-solid fa-circle-notch fa-spin text-4xl mb-4 text-blue-500"></i></div>
+                        ) : (
+                            <>
+                                {route === 'home' && <Home pdfs={pdfs} setViewingPdf={setViewingPdf} setRoute={setRoute} unlockedPdfs={unlockedPdfs} />}
+                                {route === 'login' && <Login setRoute={setRoute} showToast={showToast} />}
+                                {route === 'dashboard' && isAdmin && <Dashboard pdfs={pdfs} showToast={showToast} collectionPath={collectionPath} />}
+                            </>
+                        )}
+                    </main>
+                    
+                    {route !== 'view' && (
+                        <footer className="py-8 text-center text-slate-400 text-sm"><p className="font-medium">&copy; {new Date().getFullYear()} นายณัฐพงศ์ ขาวนุ้ย. All rights reserved.</p></footer>
+                    )}
+                    {toast.show && <Toast toast={toast} />}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
+
