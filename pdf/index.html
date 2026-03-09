@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เอกสารปลอดภัย | นายณัฐพงศ์ ขาวนุ้ย</title>
+    <title>เอกสารปลอดภัย | SPT MORAL SCHOOL</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,13 +32,13 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyBMdPWCzuV7C1VNhQ0d12LKgZ5oPcPUk1U",
-            authDomain: "natt-sgs.firebaseapp.com",
-            projectId: "natt-sgs",
-            storageBucket: "natt-sgs.firebasestorage.app",
-            messagingSenderId: "1058362846505",
-            appId: "1:1058362846505:web:9d4fbbf88e985e33cd9b38",
-            measurementId: "G-HJLQN0T2CN"
+            apiKey: "AIzaSyAqpgEbVDyjkb_YMxM-Og0I6mKyx6djjhk",
+            authDomain: "short-url-spt-moral-school.firebaseapp.com",
+            projectId: "short-url-spt-moral-school",
+            storageBucket: "short-url-spt-moral-school.firebasestorage.app",
+            messagingSenderId: "688796719253",
+            appId: "1:688796719253:web:08304cd58e97e1ab88639c",
+            measurementId: "G-0R3MZQP87E"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -224,7 +224,7 @@
                         ctx.fillStyle = 'rgba(150, 150, 150, 0.4)';
                         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(-Math.PI / 4);
-                        const text = "นายณัฐพงศ์ ขาวนุ้ย";
+                        const text = "SPT MORAL SCHOOL";
                         for (let x = -canvas.width * 2; x < canvas.width * 2; x += 300 * scale) {
                             for (let y = -canvas.height * 2; y < canvas.height * 2; y += 150 * scale) {
                                 ctx.fillText(text, x, y);
